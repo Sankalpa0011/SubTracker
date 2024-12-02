@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState } from "react";
 import { authService } from "../services/api";
 import { User, AuthContextType } from "../types";
+import { GoogleOAuthProvider, CredentialResponse } from '@react-oauth/google';
+import { GOOGLE_CONFIG } from "../config/google";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -69,6 +71,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const signInWithGoogle = async (credential: string) => {
+    try {
+      const response = await authService.googleSignIn(credential);
+      if (response.data && response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify({
+          _id: response.data._id,
+          name: response.data.name,
+          email: response.data.email,
+          isEmailVerified: response.data.isEmailVerified
+        }));
+        setUser({
+          _id: response.data._id,
+          name: response.data.name,
+          email: response.data.email,
+          isEmailVerified: response.data.isEmailVerified
+        });
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      throw new Error('Failed to sign in with Google');
+    }
+  };
+
   const signOut = async () => {
     try {
       setUser(null);
@@ -80,9 +108,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   return (
-    <AuthContext.Provider value={{ user, signIn, signUp, signOut }}>
-      {children}
-    </AuthContext.Provider>
+    <GoogleOAuthProvider clientId={GOOGLE_CONFIG.client_id}>
+      <AuthContext.Provider value={{ user, signIn, signUp, signOut, signInWithGoogle }}>
+        {children}
+      </AuthContext.Provider>
+    </GoogleOAuthProvider>
   );
 };
 

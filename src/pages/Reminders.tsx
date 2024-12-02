@@ -10,7 +10,7 @@ const Reminders = () => {
     reminders,
     isLoading,
     createReminder,
-    updateReminder,
+    // updateReminder,
     deleteReminder,
   } = useReminders();
 

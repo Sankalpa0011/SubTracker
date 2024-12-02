@@ -1,3 +1,4 @@
+export type SubscriptionInput = Omit<Subscription, '_id'>;
 export interface Subscription {
   _id: string;
   name: string;
@@ -13,10 +14,11 @@ export interface Subscription {
   autoRenew: boolean;
   renewalDate?: string;
   duration: number;
+  provider?: string; // Add provider field
 }
 
 export const sub: Subscription = {
-  id: '',
+  _id: '',
   name: '',
   price: 0,
   billingCycle: 'monthly',
@@ -28,7 +30,7 @@ export const sub: Subscription = {
   logo: '',
   status: 'active',
   autoRenew: false,
-  total: 0,
+  duration: 0
 };
 
 export interface User {
@@ -51,17 +53,13 @@ export interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
+  signInWithGoogle: (credential: string) => Promise<void>;
 }
 
 export interface NotificationPreferences {
   email: boolean;
   push: boolean;
   sms?: boolean;
-}
-
-interface AuthError {
-  message: string;
-  errors?: Array<{ msg: string }>;
 }
 
 export interface ReminderInput {
@@ -89,3 +87,12 @@ export interface Reminder {
 
 export type ReminderType = 'renewal' | 'payment' | 'expiration' | 'custom';
 export type ReminderStatus = 'pending' | 'sent' | 'snoozed' | 'cancelled';
+
+export interface ParsedSubscription {
+  name: string;
+  price?: number;
+  billingCycle?: 'monthly' | 'yearly' | 'quarterly' | 'weekly';
+  renewalDate?: string;
+  provider?: string;
+  confidence: number;
+}

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { subscriptionService } from '../services/api';
 import toast from 'react-hot-toast';
-import { Subscription } from '../types';
+import { Subscription, SubscriptionInput } from '../types';
 
 export const useSubscriptions = () => {
   const queryClient = useQueryClient();
@@ -15,7 +15,8 @@ export const useSubscriptions = () => {
   );
 
   const createMutation = useMutation(
-    (newSubscription: Subscription) => subscriptionService.create(newSubscription),
+    (newSubscription: SubscriptionInput) => 
+      subscriptionService.create(newSubscription),
     {
       onSuccess: () => {
         queryClient.invalidateQueries('subscriptions');

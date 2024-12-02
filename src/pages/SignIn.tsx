@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Mail, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import GoogleAuthButton from '../components/GoogleAuthButton';
 
 const SignIn = () => {
   const [email, setEmail] = useState('');
@@ -128,17 +129,7 @@ const SignIn = () => {
           </div>
 
           <div className="mt-6">
-            <button
-              onClick={() => toast.error('Google Sign In not implemented yet')}
-              className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-            >
-              <img
-                className="h-5 w-5 mr-2"
-                src="https://www.svgrepo.com/show/475656/google-color.svg"
-                alt="Google logo"
-              />
-              Sign in with Google
-            </button>
+            <GoogleAuthButton />
           </div>
         </div>
       </motion.div>

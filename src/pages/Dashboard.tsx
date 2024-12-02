@@ -9,32 +9,44 @@ import AddSubscriptionModal from "../components/AddSubscriptionModal";
 const Dashboard = () => {
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { subscriptions, isLoading } = useSubscriptions();
+  const { subscriptions = [], isLoading } = useSubscriptions();
+
+  interface Subscription {
+    _id: string;
+    name: string;
+    price: number;
+    billingCycle: "monthly" | "yearly" | "quarterly" | "weekly";
+    nextBillingDate: string;
+    status: string;
+    logo?: string;
+  }
 
   const calculateMonthlySpend = () => {
-    if (!subscriptions) return 0;
-    interface Subscription {
-      _id: string;
-      name: string;
-      price: number;
-      billingCycle: "monthly" | "yearly" | "quarterly" | "weekly";
-      nextBillingDate: string;
-      status: string;
-      logo?: string;
+    // Add null check and provide empty array as fallback
+    if (!subscriptions || !Array.isArray(subscriptions)) {
+      return '0.00';
     }
-
-    const calculateMonthlySpend = (): string => {
-      if (!subscriptions) return "0.00";
-      return subscriptions
-        .reduce((total: number, sub: Subscription) => {
-          if (sub.billingCycle === "monthly") return total + sub.price;
-          if (sub.billingCycle === "yearly") return total + sub.price / 12;
-          if (sub.billingCycle === "quarterly") return total + sub.price / 3;
-          if (sub.billingCycle === "weekly") return total + sub.price * 4.33;
+  
+    return subscriptions
+      .reduce((total: number, sub: Subscription) => {
+        if (!sub || !sub.price || !sub.billingCycle) {
           return total;
-        }, 0)
-        .toFixed(2);
-    };
+        }
+  
+        switch (sub.billingCycle) {
+          case 'monthly':
+            return total + sub.price;
+          case 'yearly':
+            return total + (sub.price / 12);
+          case 'quarterly':
+            return total + (sub.price / 3);
+          case 'weekly':
+            return total + (sub.price * 4.33); // Average weeks per month
+          default:
+            return total;
+        }
+      }, 0)
+      .toFixed(2);
   };
 
   interface Subscription {
