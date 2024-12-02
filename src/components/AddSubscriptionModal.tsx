@@ -208,9 +208,6 @@ const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Billing Cycle
-                  </label>
                   <label
                     htmlFor="billingCycle"
                     className="block text-sm font-medium text-gray-700"

@@ -34,3 +34,35 @@ export interface GoogleCalendarResponse {
     status: string;
   };
 }
+
+declare namespace google.accounts.oauth2 {
+  interface TokenClientConfig {
+    client_id: string;
+    scope: string;
+    callback: (response: TokenResponse) => void;
+    prompt?: 'none' | 'consent' | 'select_account';
+  }
+
+  interface TokenClient {
+    callback: (response: TokenResponse) => void;
+    requestAccessToken(options?: {
+      prompt?: 'consent' | 'select_account' | 'none';
+    }): void;
+  }
+
+  interface TokenResponse {
+    access_token: string;
+    expires_in: number;
+    scope: string;
+    token_type: string;
+    error?: string;
+    error_description?: string;
+    error_uri?: string;
+  }
+
+  function initTokenClient(config: TokenClientConfig): TokenClient;
+}
+
+declare namespace google.accounts {
+  const oauth2: typeof google.accounts.oauth2;
+}

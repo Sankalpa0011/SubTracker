@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Calendar, CreditCard, Bell, AlertCircle } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { useSubscriptions } from '../hooks/useSubscriptions';
-import QuickActions from '../components/QuickActions';
-import AddSubscriptionModal from '../components/AddSubscriptionModal';
-import { Subscription } from '../types';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Calendar, CreditCard, Bell, AlertCircle } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { useSubscriptions } from "../hooks/useSubscriptions";
+import QuickActions from "../components/QuickActions";
+import AddSubscriptionModal from "../components/AddSubscriptionModal";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -18,21 +17,23 @@ const Dashboard = () => {
       _id: string;
       name: string;
       price: number;
-      billingCycle: 'monthly' | 'yearly' | 'quarterly' | 'weekly';
+      billingCycle: "monthly" | "yearly" | "quarterly" | "weekly";
       nextBillingDate: string;
       status: string;
       logo?: string;
     }
 
     const calculateMonthlySpend = (): string => {
-      if (!subscriptions) return '0.00';
-      return subscriptions.reduce((total: number, sub: Subscription) => {
-        if (sub.billingCycle === 'monthly') return total + sub.price;
-        if (sub.billingCycle === 'yearly') return total + (sub.price / 12);
-        if (sub.billingCycle === 'quarterly') return total + (sub.price / 3);
-        if (sub.billingCycle === 'weekly') return total + (sub.price * 4.33);
-        return total;
-      }, 0).toFixed(2);
+      if (!subscriptions) return "0.00";
+      return subscriptions
+        .reduce((total: number, sub: Subscription) => {
+          if (sub.billingCycle === "monthly") return total + sub.price;
+          if (sub.billingCycle === "yearly") return total + sub.price / 12;
+          if (sub.billingCycle === "quarterly") return total + sub.price / 3;
+          if (sub.billingCycle === "weekly") return total + sub.price * 4.33;
+          return total;
+        }, 0)
+        .toFixed(2);
     };
   };
 
@@ -40,20 +41,25 @@ const Dashboard = () => {
     _id: string;
     name: string;
     price: number;
-    billingCycle: 'monthly' | 'yearly' | 'quarterly' | 'weekly';
+    billingCycle: "monthly" | "yearly" | "quarterly" | "weekly";
     nextBillingDate: string;
     status: string;
     logo?: string;
+    renewalDate?: string;
   }
 
-  const upcomingRenewals: Subscription[] = subscriptions?.filter((sub: Subscription) => {
-    const renewalDate = new Date(sub.nextBillingDate);
-    const today = new Date();
-    const diffDays = Math.ceil((renewalDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return diffDays <= 30;
-  }) || [];
+  const upcomingRenewals: Subscription[] =
+    subscriptions?.filter((sub: Subscription) => {
+      const renewalDate = new Date(sub.nextBillingDate);
+      const today = new Date();
+      const diffDays = Math.ceil(
+        (renewalDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      return diffDays <= 30;
+    }) || [];
 
-  const trialSubscriptions = subscriptions?.filter((sub: Subscription) => sub.status === 'trial') || [];
+  const trialSubscriptions =
+    subscriptions?.filter((sub: Subscription) => sub.status === "trial") || [];
 
   return (
     <motion.div
@@ -79,9 +85,11 @@ const Dashboard = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Active Subscriptions</p>
+              <p className="text-sm font-medium text-gray-600">
+                Active Subscriptions
+              </p>
               <p className="text-2xl font-semibold text-gray-900">
-                {isLoading ? '...' : subscriptions?.length || 0}
+                {isLoading ? "..." : subscriptions?.length || 0}
               </p>
             </div>
             <CreditCard className="h-8 w-8 text-indigo-600" />
@@ -96,7 +104,7 @@ const Dashboard = () => {
             <div>
               <p className="text-sm font-medium text-gray-600">Monthly Spend</p>
               <p className="text-2xl font-semibold text-gray-900">
-                ${isLoading ? '...' : calculateMonthlySpend()}
+                ${isLoading ? "..." : calculateMonthlySpend()}
               </p>
             </div>
             <Calendar className="h-8 w-8 text-green-600" />
@@ -109,9 +117,11 @@ const Dashboard = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Upcoming Renewals</p>
+              <p className="text-sm font-medium text-gray-600">
+                Upcoming Renewals
+              </p>
               <p className="text-2xl font-semibold text-gray-900">
-                {isLoading ? '...' : upcomingRenewals.length}
+                {isLoading ? "..." : upcomingRenewals.length}
               </p>
             </div>
             <Bell className="h-8 w-8 text-yellow-600" />
@@ -124,9 +134,11 @@ const Dashboard = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Trial Subscriptions</p>
+              <p className="text-sm font-medium text-gray-600">
+                Trial Subscriptions
+              </p>
               <p className="text-2xl font-semibold text-gray-900">
-                {isLoading ? '...' : trialSubscriptions.length}
+                {isLoading ? "..." : trialSubscriptions.length}
               </p>
             </div>
             <AlertCircle className="h-8 w-8 text-red-600" />
@@ -136,7 +148,9 @@ const Dashboard = () => {
 
       {/* Recent Subscriptions */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Subscriptions</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          Recent Subscriptions
+        </h2>
         {isLoading ? (
           <div className="text-center py-4">Loading...</div>
         ) : (
@@ -164,20 +178,71 @@ const Dashboard = () => {
                     </div>
                   )}
                   <div>
-                    <h3 className="font-medium text-gray-900">{subscription.name}</h3>
+                    <h3 className="font-medium text-gray-900">
+                      {subscription.name}
+                    </h3>
                     <p className="text-sm text-gray-500">
-                      Next renewal: {new Date(subscription.nextBillingDate).toLocaleDateString()}
+                      Next renewal:{" "}
+                      {new Date(
+                        subscription.nextBillingDate
+                      ).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-gray-900">${subscription.price}</p>
-                  <p className="text-sm text-gray-500">{subscription.billingCycle}</p>
+                  <p className="font-semibold text-gray-900">
+                    ${subscription.price}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {subscription.billingCycle}
+                  </p>
                 </div>
               </motion.div>
             ))}
           </div>
         )}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="bg-white rounded-lg shadow-md p-6"
+        >
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            Upcoming Renewals
+          </h2>
+          {upcomingRenewals.map((subscription) => (
+            <div
+              key={subscription._id}
+              className="flex items-center justify-between py-3 border-b last:border-0"
+            >
+              <div className="flex items-center space-x-3">
+                <img
+                  src={subscription.logo}
+                  alt={subscription.name}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+                <span className="font-medium text-gray-900">
+                  {subscription.name}
+                </span>
+              </div>
+              <div className="text-sm text-gray-500">
+                {subscription.renewalDate}
+              </div>
+            </div>
+          ))}
+        </motion.div>
+
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="bg-white rounded-lg shadow-md p-6"
+        >
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            Quick Actions
+          </h2>
+          <QuickActions onAddSubscription={() => setIsModalOpen(true)} />
+        </motion.div>
       </div>
 
       <AddSubscriptionModal
