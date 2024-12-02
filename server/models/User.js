@@ -1,56 +1,62 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+    },
+    profilePicture: {
+      type: String,
+      default: "",
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: String,
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    notificationPreferences: {
+      push: { type: Boolean, default: false },
+      email: { type: Boolean, default: false },
+      sms: { type: Boolean, default: false },
+    },
+    googleId: String,
+    googleAccessToken: String,
+    gmailAccessToken: String,
+    gmailRefreshToken: String,
   },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true,
-    lowercase: true
-  },
-  password: {
-    type: String,
-    required: true,
-    minlength: 6
-  },
-  profilePicture: {
-    type: String,
-    default: ''
-  },
-  isEmailVerified: {
-    type: Boolean,
-    default: false
-  },
-  verificationToken: String,
-  resetPasswordToken: String,
-  resetPasswordExpires: Date,
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  notificationPreferences: {
-    push: { type: Boolean, default: false },
-    email: { type: Boolean, default: false },
-    sms: { type: Boolean, default: false }
+  {
+    timestamps: true,
   }
-
-}, {
-  timestamps: true
-});
+);
 
 // Hash password before saving
-userSchema.pre('save', async function(next) {
+userSchema.pre("save", async function (next) {
   try {
-    if (!this.isModified('password')) {
+    if (!this.isModified("password")) {
       return next();
     }
-    
+
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();
@@ -60,9 +66,9 @@ userSchema.pre('save', async function(next) {
 });
 
 // Compare password method
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
 export default User;
