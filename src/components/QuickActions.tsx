@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mail, Calendar, Bell, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { addToGoogleCalendar } from "../utils/googleCalendar";
 import { useGmail } from "../hooks/useGmail";
+import { useSubscriptions } from "../hooks/useSubscriptions";
 import GmailScanResults from "./GmailScanResults";
+import toast from "react-hot-toast";
 
 interface QuickActionsProps {
   onAddSubscription: () => void;
@@ -14,21 +16,64 @@ const QuickActions: React.FC<QuickActionsProps> = () => {
   const navigate = useNavigate();
   const [showScanResults, setShowScanResults] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isCalendarConnected, setIsCalendarConnected] = useState(false);
   const { connectGmail, isLoading, subscriptionEmails } = useGmail();
+  const { subscriptions } = useSubscriptions();
+
+  useEffect(() => {
+    // Check if calendar was previously connected
+    const calendarConnected = localStorage.getItem("googleCalendarConnected");
+    setIsCalendarConnected(calendarConnected === "true");
+  }, []);
 
   const handleCalendarConnect = async () => {
     if (isConnecting) return;
 
     setIsConnecting(true);
     try {
+      // Test connection with a dummy event
       await addToGoogleCalendar({
-        name: "Test Subscription",
-        price: "$9.99",
+        name: "Test Connection",
+        price: "$0",
         renewalDate: new Date().toISOString(),
       });
+
+      setIsCalendarConnected(true);
+      localStorage.setItem("googleCalendarConnected", "true");
+      toast.success("Successfully connected to Google Calendar!");
     } catch (error) {
-      // Error is handled in the addToGoogleCalendar function
       console.error("Calendar connection failed:", error);
+      toast.error("Failed to connect to Google Calendar");
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const syncSubscriptionsToCalendar = async () => {
+    if (!subscriptions?.length) {
+      toast.error("No subscriptions to sync");
+      return;
+    }
+
+    setIsConnecting(true);
+    try {
+      let syncedCount = 0;
+      for (const sub of subscriptions) {
+        try {
+          await addToGoogleCalendar({
+            name: sub.name,
+            price: `$${sub.price}`,
+            renewalDate: sub.renewalDate || sub.nextBillingDate,
+          });
+          syncedCount++;
+        } catch (error) {
+          console.error(`Failed to sync ${sub.name}:`, error);
+        }
+      }
+
+      toast.success(`Successfully synced ${syncedCount} subscriptions to calendar!`);
+    } catch {
+      toast.error("Failed to sync some subscriptions");
     } finally {
       setIsConnecting(false);
     }
@@ -64,8 +109,7 @@ const QuickActions: React.FC<QuickActionsProps> = () => {
 
         <motion.button
           whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleCalendarConnect}
+          onClick={isCalendarConnected ? syncSubscriptionsToCalendar : handleCalendarConnect}
           disabled={isConnecting}
           className={`p-4 ${
             isConnecting
@@ -75,7 +119,11 @@ const QuickActions: React.FC<QuickActionsProps> = () => {
         >
           <Calendar className="h-6 w-6 mx-auto mb-2" />
           <span className="text-sm font-medium">
-            {isConnecting ? "Connecting..." : "Connect Calendar"}
+          {isConnecting
+              ? "Processing..."
+              : isCalendarConnected
+              ? "Sync Subscriptions"
+              : "Connect Calendar"}
           </span>
         </motion.button>
 
