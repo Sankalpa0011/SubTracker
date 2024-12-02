@@ -99,15 +99,17 @@ export const reminderService = {
   update: (id: string, data: { title?: string; description?: string; date?: string }) => api.put(`/reminders/${id}`, data),
   delete: (id: string) => api.delete(`/reminders/${id}`),
   getUpcoming: () => api.get('/reminders/upcoming'),
-  snooze: (id: string, duration: number) => 
-    api.post(`/reminders/${id}/snooze`, { duration })
+  snooze: (id: string, duration: number) => api.post(`/reminders/${id}/snooze`, { duration })
 };
 
 export const userService = {
   updateProfile: (data: Partial<User>) => api.put('/users/profile', data),
   updateSettings: (settings: Record<string, unknown>) => api.put('/users/settings', settings),
   updateNotifications: (preferences: NotificationPreferences) => 
-    api.put('/users/notifications', preferences)
+    api.put('/users/notifications', preferences),
+  updateNotificationPreferences: (preferences: NotificationPreferences) => 
+    api.put('/reminders/preferences', preferences),
+  getNotificationPreferences: () => api.get('/users/notifications'),
 };
 
 export default api;

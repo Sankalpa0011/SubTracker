@@ -33,7 +33,13 @@ const userSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  notificationPreferences: {
+    push: { type: Boolean, default: false },
+    email: { type: Boolean, default: false },
+    sms: { type: Boolean, default: false }
   }
+
 }, {
   timestamps: true
 });

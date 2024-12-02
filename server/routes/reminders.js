@@ -19,4 +19,19 @@ router.route('/:id')
   .put(updateReminder)
   .delete(deleteReminder);
 
+  router.put('/preferences', protect, async (req, res) => {
+    try {
+      const user = await User.findByIdAndUpdate(
+        req.user._id,
+        { 
+          'notificationPreferences': req.body 
+        },
+        { new: true }
+      );
+      res.json(user.notificationPreferences);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
 export default router;
