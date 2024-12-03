@@ -96,3 +96,8 @@ export interface ParsedSubscription {
   provider?: string;
   confidence: number;
 }
+
+export interface StoredTokenInfo {
+  access_token: string;
+  expires_at: number;
+}

@@ -14,7 +14,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    if (token) {
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -45,7 +45,11 @@ export const subscriptionService = {
     api.patch(`/subscriptions/${id}/auto-renewal`, { autoRenew }),
   getById: (id: string) => api.get(`/subscriptions/${id}`),
   create: (data: SubscriptionInput) => 
-    api.post<Subscription>('/subscriptions', data),
+      api.post<Subscription>('/subscriptions', data)
+        .catch(error => {
+          console.error('Subscription creation error:', error.response?.data);
+        throw error;
+      }),
   update: (id: string, data: { name?: string; price?: number; duration?: number }) => api.put(`/subscriptions/${id}`, data),
   delete: (id: string) => api.delete(`/subscriptions/${id}`),
 };

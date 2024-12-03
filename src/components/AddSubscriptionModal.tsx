@@ -93,20 +93,18 @@ const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
         duration
       );
 
-      const subscriptionData: Subscription = {
-        _id: "",
+      const subscriptionData = {
         ...validatedData,
         price: Number(validatedData.price),
         duration,
         nextBillingDate,
         status: "active" as const,
         autoRenew: true,
-        logo: "",
-        renewalDate: nextBillingDate,
       };
 
-      createSubscription(subscriptionData);
-      onAdd(subscriptionData as Subscription);
+      // Create subscription
+      await createSubscription(subscriptionData);
+      onAdd(subscriptionData);
       onClose();
       resetForm();
       toast.success("Subscription added successfully");
