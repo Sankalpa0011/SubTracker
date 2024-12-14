@@ -2,7 +2,7 @@ export type SubscriptionInput = Omit<Subscription, '_id'>;
 export interface Subscription {
   _id: string;
   name: string;
-  price: number;
+  price?: number;
   billingCycle: 'monthly' | 'yearly' | 'quarterly' | 'weekly';
   startDate: string;
   nextBillingDate: string;

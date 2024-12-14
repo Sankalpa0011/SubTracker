@@ -3,10 +3,11 @@ import { motion } from "framer-motion";
 import { Mail, Calendar, Bell, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { addToGoogleCalendar } from "../utils/googleCalendar";
-import { useGmail } from "../hooks/useGmail";
 import { useSubscriptions } from "../hooks/useSubscriptions";
 import GmailScanResults from "./GmailScanResults";
 import toast from "react-hot-toast";
+import { useGmailScanner } from "../hooks/useGmailScanner";
+import { useGmail } from "../hooks/useGmail";
 
 interface QuickActionsProps {
   onAddSubscription: () => void;
@@ -17,14 +18,51 @@ const QuickActions: React.FC<QuickActionsProps> = () => {
   const [showScanResults, setShowScanResults] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isCalendarConnected, setIsCalendarConnected] = useState(false);
-  const { connectGmail, isLoading, subscriptionEmails } = useGmail();
   const { subscriptions } = useSubscriptions();
+  const [isGmailConnected, setIsGmailConnected] = useState(false);
+  const { connectGmail, isLoading: isGmailLoading } = useGmail();
+  const { isScanning, scanEmails } = useGmailScanner();
 
   useEffect(() => {
-    // Check if calendar was previously connected
-    const calendarConnected = localStorage.getItem("googleCalendarConnected");
-    setIsCalendarConnected(calendarConnected === "true");
+    // Check if Gmail was previously connected
+    const gmailConnected = localStorage.getItem("gmailConnected");
+    setIsGmailConnected(gmailConnected === "true");
   }, []);
+
+  const handleGmailAction = async () => {
+    if (!isGmailConnected) {
+      try {
+        await connectGmail();
+        setIsGmailConnected(true);
+        localStorage.setItem("gmailConnected", "true");
+        toast.success("Successfully connected to Gmail!");
+      } catch (error) {
+        console.error("Gmail connection error:", error);
+        toast.error("Failed to connect to Gmail");
+      }
+      return;
+    }
+
+    try {
+      const accessToken = localStorage.getItem("gmail_access_token");
+      if (!accessToken) {
+        throw new Error("No Gmail access token found");
+      }
+
+      await scanEmails(accessToken);
+      setShowScanResults(true);
+    } catch (error) {
+      console.error("Gmail scan error:", error);
+      if (error.message.includes("auth")) {
+        setIsGmailConnected(false);
+        localStorage.removeItem("gmailConnected");
+        localStorage.removeItem("gmail_access_token");
+        toast.error("Gmail connection expired. Please reconnect.");
+      } else {
+        toast.error("Failed to scan Gmail. Please try again.");
+      }
+    }
+  };
 
   const handleCalendarConnect = async () => {
     if (isConnecting) return;
@@ -71,7 +109,9 @@ const QuickActions: React.FC<QuickActionsProps> = () => {
         }
       }
 
-      toast.success(`Successfully synced ${syncedCount} subscriptions to calendar!`);
+      toast.success(
+        `Successfully synced ${syncedCount} subscriptions to calendar!`
+      );
     } catch {
       toast.error("Failed to sync some subscriptions");
     } finally {
@@ -93,23 +133,36 @@ const QuickActions: React.FC<QuickActionsProps> = () => {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          onClick={connectGmail}
-          disabled={isLoading}
+          onClick={handleGmailAction}
+          disabled={isGmailLoading || isScanning}
           className={`p-4 ${
-            isLoading
+            isGmailLoading || isScanning
               ? "bg-gray-100 text-gray-500"
               : "bg-blue-50 text-blue-700 hover:bg-blue-100"
           } rounded-lg transition-colors`}
         >
           <Mail className="h-6 w-6 mx-auto mb-2" />
           <span className="text-sm font-medium">
-            {isLoading ? "Connecting..." : "Scan Gmail"}
+            {isGmailLoading || isScanning ? (
+              <>
+                <span className="inline-block animate-spin mr-2">⌛</span>
+                {isScanning ? "Scanning..." : "Connecting..."}
+              </>
+            ) : isGmailConnected ? (
+              "Scan Gmail"
+            ) : (
+              "Connect Gmail"
+            )}
           </span>
         </motion.button>
 
         <motion.button
           whileHover={{ scale: 1.02 }}
-          onClick={isCalendarConnected ? syncSubscriptionsToCalendar : handleCalendarConnect}
+          onClick={
+            isCalendarConnected
+              ? syncSubscriptionsToCalendar
+              : handleCalendarConnect
+          }
           disabled={isConnecting}
           className={`p-4 ${
             isConnecting
@@ -119,7 +172,7 @@ const QuickActions: React.FC<QuickActionsProps> = () => {
         >
           <Calendar className="h-6 w-6 mx-auto mb-2" />
           <span className="text-sm font-medium">
-          {isConnecting
+            {isConnecting
               ? "Processing..."
               : isCalendarConnected
               ? "Sync Subscriptions"
@@ -149,8 +202,8 @@ const QuickActions: React.FC<QuickActionsProps> = () => {
       </div>
       {showScanResults && (
         <GmailScanResults
-          results={subscriptionEmails}
-          isLoading={isLoading}
+          results={results} // Use results from useGmailScanner
+          isLoading={isScanning} // Use isScanning from useGmailScanner
           onClose={() => setShowScanResults(false)}
         />
       )}
