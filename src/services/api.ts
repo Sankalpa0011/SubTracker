@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AuthResponse, NotificationPreferences, Subscription, User } from '../types';
+import { AuthResponse, NotificationPreferences, Subscription, SubscriptionInput, User } from '../types';
 
 const BASE_URL = 'http://localhost:5000/api';
 
@@ -14,7 +14,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    if (token) {
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -44,20 +44,12 @@ export const subscriptionService = {
   updateAutoRenewal: (id: string, autoRenew: boolean) => 
     api.patch(`/subscriptions/${id}/auto-renewal`, { autoRenew }),
   getById: (id: string) => api.get(`/subscriptions/${id}`),
-
-    create: (data: Omit<Subscription, '_id'>) => api.post('/subscriptions', {
-      name: data.name,
-      price: Number(data.price),
-      billingCycle: data.billingCycle,
-      startDate: data.startDate,
-      nextBillingDate: data.nextBillingDate,
-      category: data.category,
-      description: data.description || '',
-      website: data.website || '',
-      status: 'active',
-      autoRenew: true,
-      duration: data.duration
-    }),
+  create: (data: SubscriptionInput) => 
+      api.post<Subscription>('/subscriptions', data)
+        .catch(error => {
+          console.error('Subscription creation error:', error.response?.data);
+        throw error;
+      }),
   update: (id: string, data: { name?: string; price?: number; duration?: number }) => api.put(`/subscriptions/${id}`, data),
   delete: (id: string) => api.delete(`/subscriptions/${id}`),
 };
@@ -91,6 +83,10 @@ export const authService = {
     
   resetPassword: (token: string, password: string) =>
     api.post(`/auth/reset-password/${token}`, { password }),
+  googleAuth: (credential: string) =>
+    api.post<AuthResponse>('/auth/google', { credential }),
+  googleSignIn: (credential: string) =>
+    api.post<AuthResponse>('/auth/google', { credential }),
 };
 
 export const reminderService = {
@@ -110,6 +106,14 @@ export const userService = {
   updateNotificationPreferences: (preferences: NotificationPreferences) => 
     api.put('/reminders/preferences', preferences),
   getNotificationPreferences: () => api.get('/users/notifications'),
+};
+
+export const gmailAuthService = {
+  authorize: () => api.get('/auth/gmail/url'),
+  handleCallback: (code: string) => 
+    api.post('/auth/gmail/callback', { code }),
+  getSubscriptions: () => 
+    api.get('/gmail/subscriptions'),
 };
 
 export default api;

@@ -58,11 +58,11 @@ const Subscriptions = () => {
   };
 
   const filteredSubscriptions = subscriptions
-    .filter(sub => filter === 'all' || sub.status === filter)
-    .filter(sub => 
-      sub.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sub.price.toString().includes(searchTerm)
-    );
+  .filter(sub => filter === 'all' || sub.status === filter)
+  .filter(sub => 
+    sub.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sub.price.toString().includes(searchTerm)
+  );
 
   return (
     <motion.div

@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { subscriptionService } from '../services/api';
 import toast from 'react-hot-toast';
-import { Subscription } from '../types';
+import { Subscription, SubscriptionInput } from '../types';
+import axios from 'axios';
 
 export const useSubscriptions = () => {
   const queryClient = useQueryClient();
@@ -15,7 +16,8 @@ export const useSubscriptions = () => {
   );
 
   const createMutation = useMutation(
-    (newSubscription: Subscription) => subscriptionService.create(newSubscription),
+    (newSubscription: SubscriptionInput) => 
+      createSubscription(newSubscription),
     {
       onSuccess: () => {
         queryClient.invalidateQueries('subscriptions');
@@ -34,6 +36,50 @@ export const useSubscriptions = () => {
       }
     }
   );
+
+  const createSubscription = async (newSubscription: SubscriptionInput) => {
+    try {
+      // Calculate duration based on billing cycle
+      const getDuration = (billingCycle: string): number => {
+        switch (billingCycle) {
+          case 'weekly': return 7;
+          case 'monthly': return 30;
+          case 'quarterly': return 90;
+          case 'yearly': return 365;
+          default: return 30;
+        }
+      };
+  
+      // Calculate next billing date
+      const startDate = new Date(newSubscription.startDate);
+      const duration = getDuration(newSubscription.billingCycle);
+      const nextDate = new Date(startDate);
+      nextDate.setDate(nextDate.getDate() + duration);
+  
+      // Prepare subscription data with all required fields
+      const subscriptionData: SubscriptionInput = {
+        name: newSubscription.name,
+        price: Number(newSubscription.price),
+        billingCycle: newSubscription.billingCycle,
+        startDate: newSubscription.startDate,
+        nextBillingDate: nextDate.toISOString(),
+        duration: duration,
+        category: newSubscription.category,
+        description: newSubscription.description || '',
+        website: newSubscription.website || '',
+        autoRenew: true,
+        status: 'active',
+      };
+    
+      const response = await subscriptionService.create(subscriptionData);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || 'Failed to create subscription');
+      }
+      throw error;
+    }
+  };
 
   return {
     subscriptions,
