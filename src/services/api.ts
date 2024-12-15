@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { AuthResponse, NotificationPreferences, Subscription, SubscriptionInput, User } from '../types';
 
-const BASE_URL = 'http://13.48.13.130:5000/api';
+const BASE_URL = 'https://13.48.13.130:5000/api';
 
 const api = axios.create({
   baseURL: BASE_URL,
